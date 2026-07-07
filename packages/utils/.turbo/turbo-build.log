@@ -1,4 +1,0 @@
-
-> @erp/utils@0.1.0 build /Users/mario/Documents/ERP/packages/utils
-> tsc --noEmit && mkdir -p dist
-

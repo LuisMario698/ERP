@@ -1,4 +1,0 @@
-
-> @erp/database@0.1.0 build /Users/mario/Documents/ERP/packages/database
-> tsc --noEmit && mkdir -p dist
-

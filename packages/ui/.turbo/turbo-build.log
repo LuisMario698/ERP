@@ -1,4 +1,0 @@
-
-> @erp/ui@0.1.0 build /Users/mario/Documents/ERP/packages/ui
-> tsc --noEmit && mkdir -p dist
-
