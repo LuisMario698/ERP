@@ -1,0 +1,4 @@
+
+> @erp/types@0.1.0 build /Users/mario/Documents/ERP/packages/types
+> tsc --noEmit && mkdir -p dist
+

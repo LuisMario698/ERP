@@ -1,0 +1,4 @@
+
+> @erp/validations@0.1.0 build /Users/mario/Documents/ERP/packages/validations
+> tsc --noEmit && mkdir -p dist
+
