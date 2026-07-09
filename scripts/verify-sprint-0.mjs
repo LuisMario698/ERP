@@ -5,7 +5,7 @@ const requiredPaths = [
   "turbo.json",
   "apps/web/package.json",
   "apps/web/app/layout.tsx",
-  "apps/web/app/page.tsx",
+  "apps/web/app/(app)/page.tsx",
   "apps/web/components/layout/app-shell.tsx",
   "apps/web/lib/supabase.ts",
   "apps/mobile/README.md",

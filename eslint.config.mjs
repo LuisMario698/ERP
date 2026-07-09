@@ -5,11 +5,14 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   { ignores: ["**/.next/**", "**/dist/**", "**/node_modules/**", "**/next-env.d.ts"] },
+  {
+    plugins: { "@next/next": nextPlugin },
+    settings: { next: { rootDir: ["apps/web/"] } },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
     files: ["apps/web/**/*.{ts,tsx}"],
-    plugins: { "@next/next": nextPlugin },
     rules: { ...nextPlugin.configs.recommended.rules, ...nextPlugin.configs["core-web-vitals"].rules },
   },
   {

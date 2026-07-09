@@ -1,0 +1,86 @@
+begin;
+
+create or replace function public.create_company_onboarding(
+  company_name_input text,
+  branch_name_input text,
+  full_name_input text
+)
+returns table(onboarded_company_id uuid, onboarded_branch_id uuid, onboarded_profile_id uuid)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  current_email text := coalesce(auth.jwt() ->> 'email', '');
+  admin_role_id uuid;
+  created_company_id uuid;
+  created_branch_id uuid;
+  existing_company_id uuid;
+  existing_branch_id uuid;
+begin
+  if current_user_id is null then
+    raise exception 'Authentication required';
+  end if;
+
+  if length(trim(company_name_input)) < 2 or length(trim(branch_name_input)) < 2 or length(trim(full_name_input)) < 2 then
+    raise exception 'Company, branch and full name are required';
+  end if;
+
+  insert into public.profiles (id, full_name, email)
+  values (current_user_id, trim(full_name_input), current_email)
+  on conflict (id) do update
+    set full_name = excluded.full_name,
+        email = excluded.email,
+        updated_at = now();
+
+  select profile.active_company_id, profile.active_branch_id
+  into existing_company_id, existing_branch_id
+  from public.profiles profile
+  where profile.id = current_user_id;
+
+  if existing_company_id is not null
+    and existing_branch_id is not null
+    and exists (
+      select 1
+      from public.user_company_memberships membership
+      where membership.user_id = current_user_id
+        and membership.company_id = existing_company_id
+        and membership.branch_id = existing_branch_id
+        and membership.status = 'active'
+    )
+  then
+    return query select existing_company_id, existing_branch_id, current_user_id;
+    return;
+  end if;
+
+  select role.id into admin_role_id from public.roles role where role.name = 'Administrador';
+
+  insert into public.companies (name, created_by)
+  values (trim(company_name_input), current_user_id)
+  returning companies.id into created_company_id;
+
+  insert into public.branches (company_id, name, code)
+  values (created_company_id, trim(branch_name_input), 'MAIN')
+  returning branches.id into created_branch_id;
+
+  insert into public.user_company_memberships (user_id, company_id, branch_id, role_id)
+  values (current_user_id, created_company_id, created_branch_id, admin_role_id)
+  on conflict (user_id, company_id) do update
+    set branch_id = excluded.branch_id,
+        role_id = excluded.role_id,
+        status = 'active';
+
+  update public.profiles
+  set active_company_id = created_company_id,
+      active_branch_id = created_branch_id,
+      updated_at = now()
+  where profiles.id = current_user_id;
+
+  return query select created_company_id, created_branch_id, current_user_id;
+end;
+$$;
+
+grant execute on function public.create_company_onboarding(text, text, text) to authenticated;
+
+commit;
